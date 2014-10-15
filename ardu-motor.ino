@@ -1,12 +1,41 @@
-/*************************************************************
-*
-*
-*
-*
-*
-*
-*
-**************************************************************/
+/*********************************************************
+**
+**  ARDU-MOTOR
+**  sketch monitorización del motor del barco con arduino
+**
+**   Modelo testeado YANMAR 1GM
+**
+**  -Revisa flujo de agua refrigeración
+**  -Temperatura motro
+**  -RPM
+**  -Carga alternador
+**
+*********************************************************
+
+Mapa de pines:
+------------------------------------
+00: Rx Serial
+01: Tx Serial
+02:<Contador sensor de flujo [FLOWCOUNTER] interrup
+03:<
+04:
+05:
+06:
+07: 
+08: 
+09: 
+10:
+11: 
+12: 
+13: 
+A0: Temperatura sensor flujo [THERMISTORPIN] in
+A1: 
+A2:
+A3:
+A4: SDA para LCD
+A5: SCL para LCD
+
+*/
 
 volatile int NbTopsFan; //measuring the rising edges of the signal
 int Calc;                               
@@ -20,6 +49,19 @@ int Calc;
  
 #define THERMISTORPIN A0 // Pin analógico sensor de temperatura del YF-S102 cable verde
 #define FLOWCOUNTER 2    // Pin digital sensor efecto hall del YF-S102 cable amarillo
+
+//....................... SEND_SMS_ALARM .......................
+byte alarmas = 0; // Indicador de alarmas detectadas (bitmap)
+//
+//  00000000
+//  |||||||+--- bit(1): si 1 Alarma flujo agua infuficiente
+//  ||||||+-----bit(2): si 1 Alarma temperatura motor elevada
+//  |||||+------bit(3): 
+//  ||||+-------bit(4): 
+//  |||+--------bit(5): 
+//
+//..............................................................
+
  
 void rpm ()     //This is the function that the interupt calls 
 { 
@@ -49,8 +91,9 @@ void loop ()
 {
   refrigeracion();
 }
+
 //
-// Refrigeracion ***************************************************************
+// Refrigeracion >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //
 void refrigeracion()
 {
@@ -83,4 +126,4 @@ void refrigeracion()
   Serial.print (" Temp.\r\n"); //Prints "L/hour" and returns a  new line
 
 }
-// 
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Refrigeracion
