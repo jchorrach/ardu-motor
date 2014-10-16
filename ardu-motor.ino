@@ -6,7 +6,7 @@
 **   Modelo testeado YANMAR 1GM
 **
 **  -Revisa flujo de agua refrigeración
-**  -Temperatura motro
+**  -Temperatura motor
 **  -RPM
 **  -Carga alternador
 **
@@ -17,7 +17,7 @@ Mapa de pines:
 00: Rx Serial
 01: Tx Serial
 02:<Contador sensor de flujo [FLOWCOUNTER] interrup
-03:<
+03:<Contador sensor de hall rpm motor [RPMCOUNTER] interrup
 04:
 05:
 06:
@@ -37,7 +37,9 @@ A5: SCL para LCD
 
 */
 
-volatile int nPulsos; // Contador general de pulsos
+volatile int nPulsos0; // Contador general de pulsos flujo
+volatile int nPulsos1; // Contador general de pulsos motor
+
 int Calc;             // Variable general de cálculo
 
 //-----------------------------------------------------------------------------------------
@@ -49,6 +51,13 @@ int Calc;             // Variable general de cálculo
  
 #define THERMISTORPIN A0 // Pin analógico sensor de temperatura del YF-S102 cable verde
 #define FLOWCOUNTER 2    // Pin digital sensor efecto hall del YF-S102 cable amarillo
+
+//-----------------------------------------------------------------------------------------
+//
+//  Sensor hall para RPM motor
+//
+//
+#define RPMCOUNTER 3    // Pin digital sensor hall para contar rpm motor
 
 //....................... ALARMAS .......................
 byte alarmas = 0; // Indicador de alarmas detectadas (bitmap)
@@ -65,11 +74,16 @@ byte alarmas = 0; // Indicador de alarmas detectadas (bitmap)
  
 //----------------------------------------------------
 //
-// subrutina para contar pulsos
+// subrutinas para contar pulsos
 //
-void rpm () 
+void rpm0 () 
 { 
-  nPulsos++;  // Incrementa contador de pulsos
+  nPulsos0++;  // Incrementa contador de pulsos
+} 
+
+void rpm1 () 
+{ 
+  nPulsos1++;  // Incrementa contador de pulsos
 } 
 
 //----------------------------------------------------
@@ -84,8 +98,12 @@ void setup()
   
   // Inicializar sensores YF-S201
   pinMode(FLOWCOUNTER, INPUT); 
-  attachInterrupt(0, rpm, RISING); //and the interrupt is attached
+  attachInterrupt(0, rpm0, RISING); 
   pinMode(THERMISTORPIN, INPUT);
+  
+  // Inicializar sensor hall RPM
+  pinMode(RPMCOUNTER, INPUT); 
+  attachInterrupt(0, rpm1, RISING); 
   
 } 
 
@@ -96,6 +114,14 @@ void setup()
 //
 void loop ()    
 {
+  
+  nPulsos0 = 0;   // A 0 contador de pulsos flujo
+  nPulsos1 = 0;   // A 0 contador de pulsos rpm
+
+  sei();         // Habilita interrupciones
+  delay (1000);  // Muestreo interrupción 1 segundo
+  cli();         // Deshabilita interrupciones
+
   refrigeracion(); // Monitorizacion refrigeración
 }
 
@@ -104,14 +130,9 @@ void loop ()
 //
 void refrigeracion()
 {
-  // Contar Hz sensor de flujo
-  nPulsos = 0;   // A 0 contador de pulsos
 
-  sei();         // Habilita interrupciones
-  delay (1000);  // Muestreo interrupción 1 segundo
-  cli();         // Deshabilita interrupciones
 
-  Calc = (NbTopsFan / 7.5); // Pulsos / 7.5Q, = l/min. 
+  Calc = (nPulsos0 * 60) / 7.5; //-> Pulsos / 7.5Q, = l/min. 
   
   // Calcular temperatura sensor flujo
   float reading;
@@ -130,7 +151,7 @@ void refrigeracion()
   
   
   Serial.print (Calc, DEC); 
-  Serial.print (" L/hour\r\n");
+  Serial.print (" L/min\r\n");
   Serial.print (reading, DEC); 
   Serial.print (" Temp.\r\n"); 
 
