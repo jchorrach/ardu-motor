@@ -37,8 +37,8 @@ A5: SCL para LCD
 
 */
 
-volatile int NbTopsFan; //measuring the rising edges of the signal
-int Calc;                               
+volatile int nPulsos; // Contador general de pulsos
+int Calc;             // Variable general de cálculo
 
 //-----------------------------------------------------------------------------------------
 //
@@ -50,7 +50,7 @@ int Calc;
 #define THERMISTORPIN A0 // Pin analógico sensor de temperatura del YF-S102 cable verde
 #define FLOWCOUNTER 2    // Pin digital sensor efecto hall del YF-S102 cable amarillo
 
-//....................... SEND_SMS_ALARM .......................
+//....................... ALARMAS .......................
 byte alarmas = 0; // Indicador de alarmas detectadas (bitmap)
 //
 //  00000000
@@ -63,33 +63,40 @@ byte alarmas = 0; // Indicador de alarmas detectadas (bitmap)
 //..............................................................
 
  
-void rpm ()     //This is the function that the interupt calls 
+//----------------------------------------------------
+//
+// subrutina para contar pulsos
+//
+void rpm () 
 { 
-  NbTopsFan++;  //This function measures the rising and falling edge of the 
- 
-//hall effect sensors signal
+  nPulsos++;  // Incrementa contador de pulsos
 } 
 
-// The setup() method runs once, when the sketch starts
-void setup() //
+//----------------------------------------------------
+//
+// SETUP
+//
+void setup()
 { 
 
-  Serial.begin(9600); //This is the setup function where the serial port is 
+  Serial.begin(9600); // Debug
 
-  pinMode(FLOWCOUNTER, INPUT); //initializes digital pin 2 as an input
- 
-  // Inicializar YF-S201
+  
+  // Inicializar sensores YF-S201
+  pinMode(FLOWCOUNTER, INPUT); 
   attachInterrupt(0, rpm, RISING); //and the interrupt is attached
   pinMode(THERMISTORPIN, INPUT);
   
 } 
 
 
-// the loop() method runs over and over again,
-// as long as the Arduino has power
+//-----------------------------------------------------
+//
+// LOOP
+//
 void loop ()    
 {
-  refrigeracion();
+  refrigeracion(); // Monitorizacion refrigeración
 }
 
 //
@@ -98,13 +105,13 @@ void loop ()
 void refrigeracion()
 {
   // Contar Hz sensor de flujo
-  NbTopsFan = 0;   //Set NbTops to 0 ready for calculations
+  nPulsos = 0;   // A 0 contador de pulsos
 
-  sei();      //Enables interrupts
-  delay (1000);   //Wait 1 second
-  cli();      //Disable interrupts
+  sei();         // Habilita interrupciones
+  delay (1000);  // Muestreo interrupción 1 segundo
+  cli();         // Deshabilita interrupciones
 
-  Calc = (NbTopsFan / 7.5); //(Pulse frequency x 60) / 7.5Q, = flow rate 
+  Calc = (NbTopsFan / 7.5); // Pulsos / 7.5Q, = l/min. 
   
   // Calcular temperatura sensor flujo
   float reading;
@@ -114,16 +121,18 @@ void refrigeracion()
   Serial.print("Analog reading "); 
   Serial.println(reading);
  
-  // convert the value to resistance
+  // Convertir el valor a resistencia en Ohms
   reading = (1023 / reading)  - 1;
   reading = SERIESRESISTOR / reading;
+  
+  //--> TO DO convertir valor Ohms a Temperatura
 
   
-  //in L/hour 
-  Serial.print (Calc, DEC); //Prints the number calculated above
-  Serial.print (" L/hour\r\n"); //Prints "L/hour" and returns a  new line
-  Serial.print (reading, DEC); //Prints the number calculated above
-  Serial.print (" Temp.\r\n"); //Prints "L/hour" and returns a  new line
+  
+  Serial.print (Calc, DEC); 
+  Serial.print (" L/hour\r\n");
+  Serial.print (reading, DEC); 
+  Serial.print (" Temp.\r\n"); 
 
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Refrigeracion
