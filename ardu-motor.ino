@@ -132,27 +132,27 @@ void refrigeracion()
 {
 
 
-  Calc = (nPulsos0 * 60) / 7.5; //-> Pulsos / 7.5Q, = l/min. 
+  Calc = nPulsos0 / 7.5; //-> Pulsos/se (hz) / 7.5 = Q l/min. 
   
   // Calcular temperatura sensor flujo
-  float reading;
+  float leeAnalog;
  
-  reading = analogRead(THERMISTORPIN);
+  leeAnalog = analogRead(THERMISTORPIN);
  
   Serial.print("Analog reading "); 
   Serial.println(reading);
  
   // Convertir el valor a resistencia en Ohms
-  reading = (1023 / reading)  - 1;
-  reading = SERIESRESISTOR / reading;
+  leeAnalog = (1023 / leeAnalog)  - 1;
+  leeAnalog = SERIESRESISTOR / leeAnalog;
   
-  //--> TO DO convertir valor Ohms a Temperatura
+  //--> TO DO convertir valor leeAnalog de Ohms a Temperatura
 
   
   
   Serial.print (Calc, DEC); 
   Serial.print (" L/min\r\n");
-  Serial.print (reading, DEC); 
+  Serial.print (leeAnalog, DEC); 
   Serial.print (" Temp.\r\n"); 
 
 }
